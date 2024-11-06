@@ -101,6 +101,8 @@ python -m autonomous_agents.main
 
 - Handlers and behaviors include robust error handling, especially in areas prone to failures like Web3 transactions and balance checks.
 
+<img width="1190" alt="Screenshot 2024-11-06 at 6 53 41 PM" src="https://github.com/user-attachments/assets/b2f19d82-091d-436f-a129-15af2e7a38ed">
+
 ## Dependencies
 
 This project relies on the following packages, as specified in `pyproject.toml`:
