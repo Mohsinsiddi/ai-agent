@@ -52,3 +52,5 @@ dmypy.json
 # Logs
 *.log
 logs/
+
+poetry.lock
