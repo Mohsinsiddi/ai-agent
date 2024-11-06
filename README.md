@@ -1,7 +1,3 @@
-Here's the README updated with instructions on running `poetry shell` after installation and the reason why it's needed before project initialization:
-
----
-
 # Autonomous Blockchain-Agents
 
 This repository contains an autonomous agent system built in Python. Agents are designed to communicate and handle tasks such as message processing and token transfers. The code is organized for scalability and includes modules for behaviors, message handling, and utilities.
@@ -63,6 +59,7 @@ To start the autonomous agents, ensure you are in the Poetry shell, then run:
 ```bash
 python -m autonomous_agents.main
 ```
+<img width="1175" alt="Screenshot 2024-11-06 at 6 50 55 PM" src="https://github.com/user-attachments/assets/abfab27e-dbf7-4ffa-ad11-20b7857f6a4a">
 
 ## Running Tests
 
