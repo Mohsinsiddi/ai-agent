@@ -52,6 +52,15 @@ This repository contains an autonomous agent system built in Python. Agents are 
 
    - **Important**: Ensure `.env` is in `.gitignore` to keep sensitive information safe.
 
+## Network and Deployment Details
+
+This project uses the **Sepolia Testnet** for blockchain interactions. We’ve set up a NodeRPC using Tenderly, leveraging its **Virtual Testnet** feature. 
+
+Tenderly has recently replaced forks with Virtual Testnets. While these virtual testnets are useful, they have a limited block cap and will shut down after reaching it. Once this limit is reached, the configuration may need to be reset, and the environment reconfigured.
+
+For this project:
+- A custom token contract has been deployed on Sepolia, and the source wallet (configured in `.env`) is funded with tokens. This wallet is used to transfer tokens to the specified target address.     
+
 ## Running the Project
 
 To start the autonomous agents, ensure you are in the Poetry shell, then run:
