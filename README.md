@@ -39,16 +39,21 @@ This repository contains an autonomous agent system built in Python. Agents are 
    - **Why this is necessary**: Running `poetry shell` ensures that your terminal is using the correct virtual environment for this project, isolating dependencies. This step is crucial before initializing or running the project, as it ensures the installed packages are accessible and prevents conflicts with system-wide Python packages.
 
 4. **Environment Setup**:
+
    - Create a `.env` file from the `.env.example` file:
      ```bash
      cp .env.example .env
      ```
    - Populate `.env` with required values:
-     - `RPC_PROVIDER_URL`: URL of the Web3 provider (e.g., Infura).
+
+     - `WEB3_PROVIDER_URL`: URL of the Web3 provider (e.g., Infura).
      - `TOKEN_ADDRESS`: ERC20 token address for balance checks and transfers.
-     - `SOURCE_ADDRESS`: Source wallet address for token transfers.
-     - `TARGET_ADDRESS`: Target wallet address for token transfers.
-     - `PRIVATE_KEY`: Private key of the source wallet (Note: **never commit this to version control**).
+     - `WALLET1_ADDRESS`: Source wallet 1 address for token transfers. (Note: **Can be same as well**).
+     - `WALLET2_ADDRESS`: Source wallet 2 address for token transfers. (Note: **Can be same as well**).
+     - `TARGET_ADDRESS`: Target wallet address for token transfers. (Note: **This wallet address will recieve transferred tokens**).
+     - `PRIVATE_KEY1`: Private key of the wallet 1 for agent1 (Note: **never commit this to version control**).
+     - `PRIVATE_KEY2`: Private key of the wallet 2 for agent2(Note: **never commit this to version control**).
+
    - **Important**: Ensure `.env` is in `.gitignore` to keep sensitive information safe.
 
 ## Running the Project
