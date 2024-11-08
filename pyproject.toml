@@ -12,6 +12,8 @@ eth-typing = "^5.0.1"
 eth-account = "^0.13.4"
 colorlog = "^6.9.0"
 python-dotenv = "^1.0.1"
+redis = "^5.0.1"  # Remove aioredis and add this instead
+
 
 
 [tool.poetry.group.dev.dependencies]
