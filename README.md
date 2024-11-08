@@ -68,9 +68,19 @@ This repository contains an autonomous agent system built in Python. The agents 
 
    - **Note**: Ensure `.env` is listed in `.gitignore` to keep sensitive information secure.
 
+To update your README with an explanation of why you chose Tenderly’s Virtual Testnet over the general virtual testnet, and include details on using Sepolia Testnet for smoother transactions, you could add a new section under **Network and Deployment Details**. Here's how you could format it:
+
+---
+
 ## Network and Deployment Details
 
-This project uses the **Sepolia Testnet** for blockchain interactions, with a custom token contract and a funded source wallet. The testnet setup uses **Tenderly’s Virtual Testnet** feature, which provides a limited block cap before needing a reset.
+This project interacts with the blockchain via the **Sepolia Testnet**, where we deployed a custom token contract and ensured a funded source wallet. While exploring test environments, we initially considered using a **Virtual Testnet** with Tenderly. However, due to a block limit of 50 for trial sessions on the Virtual Testnet, we would need to reset frequently and redeploy our token contract each time, leading to inefficiencies in testing. This constraint prompted us to choose the Sepolia Testnet to avoid repetitive redeployment and to simulate real-time delays during transaction processing.
+
+**Note**: The Tenderly Virtual Testnet remains an option for faster transactions if configured with its RPC URL. When switching to this environment, deploy the token contract on the Virtual Testnet and adjust the values in `.env` accordingly, including the funded wallets and private keys.
+
+> _See the attached image for the block limit trial notice on the Virtual Testnet._
+
+Let me know if you’d like any further refinements to this explanation!
 
 ## Running the Project
 
