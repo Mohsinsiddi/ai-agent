@@ -96,10 +96,11 @@ async def test_crypto_transfer_handler(web3_mock):
         TEST_TOKEN_ADDRESS,
         TEST_WALLET1_ADDRESS,
         TEST_TARGET_ADDRESS,
-        TEST_PRIVATE_KEY
+        TEST_PRIVATE_KEY,
+        "Agent1"
     )
     agent = AutonomousAgent("TestAgent")
-    
+
     # Test with crypto message
     crypto_message = Message(
         type=MessageType.TEXT,
@@ -107,15 +108,14 @@ async def test_crypto_transfer_handler(web3_mock):
     )
     can_handle = await handler.can_handle(crypto_message)
     assert can_handle is True
-    
+
     # Test transaction handling
-    with patch('eth_account.Account.sign_transaction') as mock_sign:
-        mock_sign.return_value.rawTransaction = b'raw_transaction'
+    with patch('eth_account.Account.sign_transaction', return_value=Mock(raw_transaction=b'raw_transaction')):
         web3_mock.eth.send_raw_transaction.return_value = b'tx_hash'
         web3_mock.eth.wait_for_transaction_receipt.return_value = {'status': 1, 'gasUsed': 100000}
-        
+
         await handler.handle(crypto_message, agent)
-        
+
         # Verify transaction was attempted
         assert web3_mock.eth.send_raw_transaction.called
         assert web3_mock.eth.wait_for_transaction_receipt.called

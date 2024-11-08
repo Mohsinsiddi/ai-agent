@@ -12,6 +12,12 @@ eth-typing = "^5.0.1"
 eth-account = "^0.13.4"
 colorlog = "^6.9.0"
 python-dotenv = "^1.0.1"
+redis = "^5.0.1"  # Remove aioredis and add this instead
+click = "^8.1.7"
+
+[tool.poetry.scripts]
+agent-system = "autonomous_agents.cli.agent_cli:main"
+transfer-processor = "autonomous_agents.cli.processor_cli:main"
 
 
 [tool.poetry.group.dev.dependencies]

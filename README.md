@@ -1,14 +1,17 @@
 # Autonomous Blockchain-Agents
 
-This repository contains an autonomous agent system built in Python. Agents are designed to communicate and handle tasks such as message processing and token transfers. The code is organized for scalability and includes modules for behaviors, message handling, and utilities.
+This repository contains an autonomous agent system built in Python. The agents are designed to communicate and handle tasks like message processing and token transfers. The project structure supports scalability and includes modules for agent behaviors, message handling, utilities, and background processing for non-blocking operations.
 
 ## Prerequisites
 
 1. **Python 3**: Ensure Python 3 is installed.
-2. **Poetry**: Ensure Poetry is installed to manage dependencies. You can install it via:
+2. **Poetry**: Poetry is used to manage dependencies. Install it with:
+
    ```bash
    curl -sSL https://install.python-poetry.org | python3 -
    ```
+
+3. **Redis**: Ensure Redis is installed and running as it’s required for managing background tasks with Redis Queue (RQ).
 
 ## Installation
 
@@ -20,54 +23,59 @@ This repository contains an autonomous agent system built in Python. Agents are 
    ```
 
 2. **Install Dependencies**:
-   Use Poetry to install all required dependencies:
+   Use Poetry to install all dependencies:
 
    ```bash
    poetry install
    ```
 
 3. **Activate Virtual Environment**:
+   Enter Poetry's virtual environment:
 
-   - Run the following command to enter Poetry's virtual environment:
-     ```bash
-     poetry shell
-     ```
-   - **Why this is necessary**: Running `poetry shell` ensures that your terminal is using the correct virtual environment for this project, isolating dependencies. This step is crucial before initializing or running the project, as it ensures the installed packages are accessible and prevents conflicts with system-wide Python packages.
+   ```bash
+   poetry shell
+   ```
 
 4. **Environment Setup**:
 
-   - Create a `.env` file from the `.env.example` file:
+   - Copy the `.env.example` file to create a `.env` file:
      ```bash
      cp .env.example .env
      ```
-   - Populate `.env` with required values:
+   - Populate the `.env` file with required values:
 
      - `WEB3_PROVIDER_URL`: URL of the Web3 provider (e.g., Infura).
      - `TOKEN_ADDRESS`: ERC20 token address for balance checks and transfers.
-     - `WALLET1_ADDRESS`: Source wallet 1 address for token transfers. (Note: **Can be same as well**).
-     - `WALLET2_ADDRESS`: Source wallet 2 address for token transfers. (Note: **Can be same as well**).
-     - `TARGET_ADDRESS`: Target wallet address for token transfers. (Note: **This wallet address will recieve transferred tokens**).
-     - `PRIVATE_KEY1`: Private key of the wallet 1 for agent1 (Note: **never commit this to version control**).
-     - `PRIVATE_KEY2`: Private key of the wallet 2 for agent2(Note: **never commit this to version control**).
+     - `WALLET1_ADDRESS`: Source wallet 1 address for token transfers.
+     - `WALLET2_ADDRESS`: Source wallet 2 address for token transfers.
+     - `TARGET_ADDRESS`: Target wallet address for token transfers.
+     - `PRIVATE_KEY1`: Private key of wallet 1 for agent1 (**never commit this to version control**).
+     - `PRIVATE_KEY2`: Private key of wallet 2 for agent2 (**never commit this to version control**).
+     - `REDIS_URL`: URL for Redis server, used for background task management.
 
-   - **Important**: Ensure `.env` is in `.gitignore` to keep sensitive information safe.
+   - **Note**: Ensure `.env` is listed in `.gitignore` to keep sensitive information secure.
 
 ## Network and Deployment Details
 
-This project uses the **Sepolia Testnet** for blockchain interactions. We’ve set up a NodeRPC using Tenderly, leveraging its **Virtual Testnet** feature. 
-
-Tenderly has recently replaced forks with Virtual Testnets. While these virtual testnets are useful, they have a limited block cap and will shut down after reaching it. Once this limit is reached, the configuration may need to be reset, and the environment reconfigured.
-
-For this project:
-- A custom token contract has been deployed on Sepolia, and the source wallet (configured in `.env`) is funded with tokens. This wallet is used to transfer tokens to the specified target address.     
+This project uses the **Sepolia Testnet** for blockchain interactions, with a custom token contract and a funded source wallet. The testnet setup uses **Tenderly’s Virtual Testnet** feature, which provides a limited block cap before needing a reset.
 
 ## Running the Project
 
-To start the autonomous agents, ensure you are in the Poetry shell, then run:
+Two primary commands are needed to run the system:
 
-```bash
-python -m autonomous_agents.main
-```
+1. **Transfer Processor**: Start the background task processor that handles crypto transfers asynchronously to avoid blocking agents.
+
+   ```bash
+   poetry run transfer-processor
+   ```
+
+2. **Agent System**: Start the autonomous agents.
+   ```bash
+   poetry run agent-system
+   ```
+   **Suggested CLI Workflow**:
+   To run both commands concurrently, open two separate terminals and execute each command in a separate terminal. Alternatively, you can use a command multiplexer (like `tmux` or `screen`) to run both commands within the same terminal session.
+
 <img width="1175" alt="Screenshot 2024-11-06 at 6 50 55 PM" src="https://github.com/user-attachments/assets/abfab27e-dbf7-4ffa-ad11-20b7857f6a4a">
 
 ## Running Tests
@@ -76,7 +84,7 @@ python -m autonomous_agents.main
   ```bash
   poetry run pytest tests/test_autonomous_agents.py -v
   ```
-- **With CLI Logs**: For more detailed logs in the CLI, run:
+- **With CLI Logs**: For detailed CLI logs, use:
   ```bash
   poetry run pytest tests/test_autonomous_agents.py -v --log-cli-level=DEBUG
   ```
@@ -85,47 +93,51 @@ python -m autonomous_agents.main
 
 ### Folder Structure
 
-- **core/**: Contains core functionality of the agents, such as agent setup, message boxes, and utilities.
-- **handlers/**: Houses message handlers for processing specific message types, such as text or transaction-related messages.
-- **behaviors/**: Holds behaviors that define agent actions. For instance, balance checks and random message generation behaviors.
-- **utils/**: Contains utility functions and configurations, including logging setup.
+- **core/**: Core functionality, including agent setup, message handling, and utilities.
+- **handlers/**: Message handlers for processing messages such as text and transaction requests.
+- **behaviors/**: Agent behaviors, including balance checks and random message generation.
+- **utils/**: Utility functions and configurations, such as logging setup.
+- **tasks/**: Background tasks for processing crypto transfers, using Redis Queue (RQ) to handle asynchronous transfers.
 
 ### Key Components
 
 - **Handlers**:
 
-  - `MessageHandler`: Abstract base class for handling messages.
-  - `HelloMessageHandler`: Processes "hello" messages and logs the receipt.
-  - `CryptoTransferHandler`: Manages token transfers between wallets with error handling for balance and transaction issues.
+  - `MessageHandler`: Base class for message handling.
+  - `HelloMessageHandler`: Processes “hello” messages and logs the receipt.
+  - `CryptoTransferHandler`: Manages token transfers between wallets with error handling.
 
 - **Behaviors**:
   - `RandomMessageBehavior`: Periodically generates random messages for agent interaction.
-  - `TokenBalanceCheckBehavior`: Checks token balances at set intervals, with detailed logging for each check.
+  - `TokenBalanceCheckBehavior`: Checks token balances at intervals with logging.
+
+### Background Processing with Redis Queue (RQ)
+
+This project uses Redis and RQ to handle token transfer operations in the background, ensuring the agents are non-blocking. Redis tasks are processed separately by running the `transfer-processor` script, which manages background transfers.
 
 ### Logging
 
-- Uses **colorlog** for colorful, structured logs. Configured to display log levels and timestamps for easy debugging.
+- Uses **colorlog** for color-coded logs. Logs are structured with levels and timestamps for easy debugging.
 
 ### Error Handling
 
-- Handlers and behaviors include robust error handling, especially in areas prone to failures like Web3 transactions and balance checks.
-
-<img width="1190" alt="Screenshot 2024-11-06 at 6 53 41 PM" src="https://github.com/user-attachments/assets/b2f19d82-091d-436f-a129-15af2e7a38ed">
+- Robust error handling is integrated into both handlers and behaviors, especially for Web3 transactions and balance checks.
+  <img width="1190" alt="Screenshot 2024-11-06 at 6 53 41 PM" src="https://github.com/user-attachments/assets/b2f19d82-091d-436f-a129-15af2e7a38ed">
 
 ## Dependencies
 
-This project relies on the following packages, as specified in `pyproject.toml`:
+This project relies on the following packages:
 
-- **web3** (`^7.4.0`): For interaction with the Ethereum blockchain.
-- **eth-typing** (`^5.0.1`): Provides type definitions for Ethereum-related data.
-- **eth-account** (`^0.13.4`): Allows for account and private key handling.
-- **colorlog** (`^6.9.0`): Adds colorized logging support for better visibility of log levels.
-- **python-dotenv** (`^1.0.1`): Loads environment variables from a `.env` file for sensitive configurations.
+- **web3**: For Ethereum blockchain interaction.
+- **eth-typing** and **eth-account**: For Ethereum-specific type definitions and account handling.
+- **colorlog**: For enhanced log visibility.
+- **python-dotenv**: Loads environment variables from `.env` files.
+- **redis** and **rq**: For Redis Queue-based background task processing.
 
 ### Development Dependencies
 
-For testing, the following development dependencies are used:
+For testing and development, the following packages are included:
 
-- **pytest** (`^8.3.3`): Framework for running tests.
-- **pytest-asyncio** (`^0.24.0`): Adds asyncio support to pytest for asynchronous tests.
-- **pytest-mock** (`^3.14.0`): Provides mock functionality for testing.
+- **pytest**: Framework for running tests.
+- **pytest-asyncio**: Adds asyncio support to pytest.
+- **pytest-mock**: Provides mock functionality for testing.

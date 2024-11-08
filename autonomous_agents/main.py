@@ -43,7 +43,8 @@ class AgentSystem:
             config.TOKEN_ADDRESS,
             config.WALLET1_ADDRESS,
             config.TARGET_ADDRESS,
-            config.PRIVATE_KEY1
+            config.PRIVATE_KEY1,
+            "Agent1"  # Add agent name here
         ))
         
         # Configure agent2
@@ -57,7 +58,8 @@ class AgentSystem:
             config.TOKEN_ADDRESS,
             config.WALLET2_ADDRESS,
             config.TARGET_ADDRESS,
-            config.PRIVATE_KEY2
+            config.PRIVATE_KEY2,
+            "Agent2"  # Add agent name here
         ))
 
     async def shutdown(self):

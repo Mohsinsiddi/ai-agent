@@ -1,150 +1,101 @@
-"""
-Cryptocurrency transaction handler implementation.
-
-This module provides a handler that processes crypto-related messages
-and executes token transfers.
-"""
-
 import json
+import asyncio
 from typing import List
 from web3 import Web3
-from eth_account import Account
+from redis.asyncio import Redis
 from ..handlers.base import MessageHandler
 from ..core.message import Message, MessageType
 from ..utils.logger import logger
-from ..config import ERC20_ABI
+from ..config import ERC20_ABI, REDIS_URL
 
 class CryptoTransferHandler(MessageHandler):
-    """Handler for processing cryptocurrency transfers."""
-    
     def __init__(
         self,
         web3: Web3,
         token_address: str,
         source_address: str,
         target_address: str,
-        private_key: str
+        private_key: str,
+        agent_name: str  # Add agent_name parameter
     ):
-        """
-        Initialize the handler.
-        
-        Args:
-            web3 (Web3): Web3 instance
-            token_address (str): Token contract address
-            source_address (str): Source wallet address
-            target_address (str): Target wallet address
-            private_key (str): Private key for source wallet
-        """
         self.web3 = web3
+        self.token_address = token_address
+        self.source_address = source_address
+        self.target_address = target_address
+        self.private_key = private_key
+        self.agent_name = agent_name  # Store agent name
+        self.redis = None
+
+        # Initialize token contract
         self.token_contract = self.web3.eth.contract(
             address=self.web3.to_checksum_address(token_address),
             abi=json.loads(ERC20_ABI)
         )
-        self.source_address = self.web3.to_checksum_address(source_address)
-        self.target_address = self.web3.to_checksum_address(target_address)
-        self.private_key = private_key
-        self.account = Account.from_key(private_key)
+        # Get token decimals
+        self.decimals = self.token_contract.functions.decimals().call()
+
+    async def initialize(self):
+        """Initialize Redis connection."""
+        if not self.redis:
+            self.redis = Redis.from_url(REDIS_URL, decode_responses=True)
+            
+    async def check_status_updates(self):
+        """Check for status updates from the processor."""
+        status_channel = f"transfer_status_{self.agent_name}"
+        result = await self.redis.get(status_channel)
+        
+        if result:
+            status_data = json.loads(result)
+            # Clear the status after reading
+            await self.redis.delete(status_channel)
+            
+            if status_data['status'] == 'success':
+                # Convert amount to decimal representation if present
+                if 'amount' in status_data:
+                    amount = int(status_data['amount']) / (10 ** self.decimals)
+                    logger.info(f"✅ Transfer of {amount} tokens completed for {self.agent_name}!")
+                else:
+                    logger.info(f"✅ Transfer completed for {self.agent_name}!")
+                logger.info(f"   Transaction Hash: {status_data['tx_hash']}")
+                logger.info(f"   Block Number: {status_data['block_number']}")
+                logger.info(f"   Sender: {status_data['sender']}")
+                logger.info(f"   Gas Used: {status_data['gas_used']}")
+            elif status_data['status'] == 'error':
+                logger.error(f"❌ Transfer failed for {self.agent_name}: {status_data['error']}")
+
 
     def supported_message_types(self) -> List[MessageType]:
-        """
-        Get supported message types.
-        
-        Returns:
-            List[MessageType]: List containing TEXT message type
-        """
         return [MessageType.TEXT]
 
     async def can_handle(self, message: Message) -> bool:
-        """
-        Check if message contains "crypto".
-        
-        Args:
-            message (Message): Message to check
-
-        Returns:
-            bool: True if message contains "crypto", False otherwise
-        """
         return (
-            isinstance(message.content, str) and
-            "crypto" in message.content.lower()
+            isinstance(message.content, str)
+            and "crypto" in message.content.lower()
         )
 
     async def handle(self, message: Message, agent: 'AutonomousAgent') -> None:
-        """
-        Process crypto transfer message.
+        """Queue crypto transfer for background processing."""
+        await self.initialize()
         
-        Args:
-            message (Message): Message to process
-            agent (AutonomousAgent): Agent processing the message
-        """
-        try:
-            # Check balance
-            balance = self.token_contract.functions.balanceOf(self.source_address).call()
-            logger.info(f"💰 Current balance before transfer: {balance}")
-            
-            if balance >= 1:
-                # Get nonce
-                nonce = self.web3.eth.get_transaction_count(self.source_address)
-                
-                # Create transfer function
-                transfer_function = self.token_contract.functions.transfer(
-                    self.target_address,
-                    1  # Transfer 1 token unit
-                )
-                
-                # Build transaction
-                # Get base fee
-                base_fee = self.web3.eth.get_block('latest').baseFeePerGas
+        # Check for any pending status updates
+        await self.check_status_updates()
+        
+         # Calculate amount in token units (1 token = 10^decimals units)
+        amount = 1 * (10 ** self.decimals)
 
-                # Calculate max priority fee (tip)
-                max_priority_fee = self.web3.eth.max_priority_fee
-
-                # Calculate max fee (base fee + priority fee + buffer)
-                max_fee_per_gas = (2 * base_fee) + max_priority_fee
-
-                # # Build transaction with EIP-1559 parameters
-                # txn = transfer_function.build_transaction({
-                #     'from': self.source_address,
-                #     'nonce': nonce,
-                #     'gas': 1000000,
-                #     'maxFeePerGas': max_fee_per_gas,
-                #     'maxPriorityFeePerGas': max_priority_fee,
-                #     'chainId': self.web3.eth.chain_id,
-                #     'type': 2  # EIP-1559 transaction type
-                # })
-                
-                # Build transaction with higher gas price
-                txn = transfer_function.build_transaction({
-                    'from': self.source_address,
-                    'nonce': nonce,
-                    'gas': 1000000,
-                    'gasPrice': int(self.web3.eth.gas_price * 10),  # Increase gas price by 20%
-                    'chainId': self.web3.eth.chain_id
-                })
-                # Sign transaction
-                signed_txn = Account.sign_transaction(txn, self.private_key)
-                
-                # Send transaction
-                tx_hash = self.web3.eth.send_raw_transaction(signed_txn.raw_transaction)
-                
-                logger.info(f"💸 Token transfer initiated")
-                logger.info(f"📝 Transaction details:")
-                logger.info(f"   From: {self.source_address[:6]}...{self.source_address[-4:]}")
-                logger.info(f"   To: {self.target_address[:6]}...{self.target_address[-4:]}")
-                logger.info(f"   Amount: 1 token")
-                logger.info(f"   Transaction Hash: {tx_hash.hex()}")
-                
-                # Wait for transaction receipt
-                receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
-                if receipt['status'] == 1:
-                    logger.info(f"✅ Transaction confirmed! Gas used: {receipt['gasUsed']}")
-                else:
-                    logger.error(f"❌ Transaction failed!")
-                
-            else:
-                logger.warning(f"⚠️ Insufficient balance in source wallet: {balance}")
-                
-        except Exception as e:
-            logger.error(f"❌ Failed to transfer token: {str(e)}")
-            logger.error(f"   Source: {self.source_address}")
-            logger.error(f"   Target: {self.target_address}")
+        transfer_data = {
+            'token_address': self.token_address,
+            'source_address': self.source_address,
+            'target_address': self.target_address,
+            'private_key': self.private_key,
+            'amount': amount,  
+            'web3_provider': self.web3.provider.endpoint_uri,
+            'agent_name': self.agent_name
+        }
+        
+        await self.redis.lpush('crypto_transfers', json.dumps(transfer_data))
+        
+        logger.info(f"💸 Token transfer of 1 token queued by {self.agent_name}")
+        logger.info(f"   From: {self.source_address[:6]}...{self.source_address[-4:]}")
+        logger.info(f"   To: {self.target_address[:6]}...{self.target_address[-4:]}")
+        logger.info(f"   Token: {self.token_address[:6]}...{self.token_address[-4:]}")
