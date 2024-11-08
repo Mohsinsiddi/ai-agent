@@ -30,7 +30,6 @@ class TransferProcessor:
                 address=web3.to_checksum_address(transfer_data['token_address']),
                 abi=json.loads(ERC20_ABI)
             )
-            
             source_address = web3.to_checksum_address(transfer_data['source_address'])
             target_address = web3.to_checksum_address(transfer_data['target_address'])
             private_key = transfer_data['private_key']

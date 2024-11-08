@@ -1,10 +1,3 @@
-"""
-Token balance checking behavior implementation.
-
-This module provides a behavior that periodically checks the token
-balance of a specified wallet address.
-"""
-
 import time
 import json
 from web3 import Web3
@@ -39,6 +32,9 @@ class TokenBalanceCheckBehavior(Behavior):
         self.wallet_address = self.web3.to_checksum_address(wallet_address)
         self.interval = interval
         self.last_execution = 0
+        
+        # Get token decimals
+        self.decimals = self.token_contract.functions.decimals().call()
 
     async def should_act(self) -> bool:
         """
@@ -58,7 +54,11 @@ class TokenBalanceCheckBehavior(Behavior):
         """
         try:
             balance = self.token_contract.functions.balanceOf(self.wallet_address).call()
-            logger.info(f"💰 Token balance for {self.wallet_address[:6]}...{self.wallet_address[-4:]}: {balance} units")
+            # Convert balance to decimal representation
+            decimal_balance = balance / (10 ** self.decimals)
+            
+            logger.info(f"💰 Token balance for {self.wallet_address[:6]}...{self.wallet_address[-4:]}: {decimal_balance} tokens")
             self.last_execution = time.time()
+            
         except Exception as e:
             logger.error(f"❌ Failed to check balance: {str(e)}")

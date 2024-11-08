@@ -26,6 +26,14 @@ class CryptoTransferHandler(MessageHandler):
         self.agent_name = agent_name  # Store agent name
         self.redis = None
 
+        # Initialize token contract
+        self.token_contract = self.web3.eth.contract(
+            address=self.web3.to_checksum_address(token_address),
+            abi=json.loads(ERC20_ABI)
+        )
+        # Get token decimals
+        self.decimals = self.token_contract.functions.decimals().call()
+
     async def initialize(self):
         """Initialize Redis connection."""
         if not self.redis:
@@ -42,13 +50,19 @@ class CryptoTransferHandler(MessageHandler):
             await self.redis.delete(status_channel)
             
             if status_data['status'] == 'success':
-                logger.info(f"✅ Transfer completed for {self.agent_name}!")
+                # Convert amount to decimal representation if present
+                if 'amount' in status_data:
+                    amount = int(status_data['amount']) / (10 ** self.decimals)
+                    logger.info(f"✅ Transfer of {amount} tokens completed for {self.agent_name}!")
+                else:
+                    logger.info(f"✅ Transfer completed for {self.agent_name}!")
                 logger.info(f"   Transaction Hash: {status_data['tx_hash']}")
                 logger.info(f"   Block Number: {status_data['block_number']}")
                 logger.info(f"   Sender: {status_data['sender']}")
                 logger.info(f"   Gas Used: {status_data['gas_used']}")
             elif status_data['status'] == 'error':
                 logger.error(f"❌ Transfer failed for {self.agent_name}: {status_data['error']}")
+
 
     def supported_message_types(self) -> List[MessageType]:
         return [MessageType.TEXT]
@@ -66,19 +80,22 @@ class CryptoTransferHandler(MessageHandler):
         # Check for any pending status updates
         await self.check_status_updates()
         
+         # Calculate amount in token units (1 token = 10^decimals units)
+        amount = 1 * (10 ** self.decimals)
+
         transfer_data = {
             'token_address': self.token_address,
             'source_address': self.source_address,
             'target_address': self.target_address,
             'private_key': self.private_key,
-            'amount': 1,  # Fixed amount for demo
+            'amount': amount,  
             'web3_provider': self.web3.provider.endpoint_uri,
             'agent_name': self.agent_name
         }
         
         await self.redis.lpush('crypto_transfers', json.dumps(transfer_data))
         
-        logger.info(f"💸 Token transfer queued by {self.agent_name}")
+        logger.info(f"💸 Token transfer of 1 token queued by {self.agent_name}")
         logger.info(f"   From: {self.source_address[:6]}...{self.source_address[-4:]}")
         logger.info(f"   To: {self.target_address[:6]}...{self.target_address[-4:]}")
         logger.info(f"   Token: {self.token_address[:6]}...{self.token_address[-4:]}")
