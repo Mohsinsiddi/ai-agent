@@ -11,7 +11,7 @@ This repository contains an autonomous agent system built in Python. The agents 
    curl -sSL https://install.python-poetry.org | python3 -
    ```
 
-3. **Redis**: Ensure Redis is installed and running as it’s required for managing background tasks with Redis Queue (RQ).
+3. **Redis**: Ensure Redis is installed and running, as it’s required for managing background tasks with Redis Queue (RQ).
 
 ## Installation
 
@@ -42,7 +42,9 @@ This repository contains an autonomous agent system built in Python. The agents 
      ```bash
      cp .env.example .env
      ```
-   - Populate the `.env` file with required values:
+   - Populate the `.env` file with required values for main operations and testing.
+
+     ### Required Environment Variables for Main Operations:
 
      - `WEB3_PROVIDER_URL`: URL of the Web3 provider (e.g., Infura).
      - `TOKEN_ADDRESS`: ERC20 token address for balance checks and transfers.
@@ -52,6 +54,17 @@ This repository contains an autonomous agent system built in Python. The agents 
      - `PRIVATE_KEY1`: Private key of wallet 1 for agent1 (**never commit this to version control**).
      - `PRIVATE_KEY2`: Private key of wallet 2 for agent2 (**never commit this to version control**).
      - `REDIS_URL`: URL for Redis server, used for background task management.
+
+     ### Required Environment Variables for Testing:
+
+     Before running tests, set the following additional environment variables in `.env` to provide necessary values for the test suite:
+
+     - `TEST_TOKEN_ADDRESS`: Token address used for testing purposes.
+     - `TEST_WALLET1_ADDRESS`: Wallet 1 address used in test scenarios.
+     - `TEST_WALLET2_ADDRESS`: Wallet 2 address used in test scenarios.
+     - `TEST_TARGET_ADDRESS`: Target wallet address used in test transfers.
+     - `TEST_PRIVATE_KEY`: Private key for testing transactions (**never commit this to version control**).
+     - `RPC_URL`: RPC URL for testing on the blockchain network.
 
    - **Note**: Ensure `.env` is listed in `.gitignore` to keep sensitive information secure.
 
@@ -73,12 +86,15 @@ Two primary commands are needed to run the system:
    ```bash
    poetry run agent-system
    ```
-   **Suggested CLI Workflow**:
-   To run both commands concurrently, open two separate terminals and execute each command in a separate terminal. Alternatively, you can use a command multiplexer (like `tmux` or `screen`) to run both commands within the same terminal session.
+
+**Suggested CLI Workflow**:
+To run both commands concurrently, open two separate terminals and execute each command in a separate terminal. Alternatively, you can use a command multiplexer (like `tmux` or `screen`) to run both commands within the same terminal session.
 
 <img width="1175" alt="Screenshot 2024-11-06 at 6 50 55 PM" src="https://github.com/user-attachments/assets/abfab27e-dbf7-4ffa-ad11-20b7857f6a4a">
 
 ## Running Tests
+
+Before running the test suite, ensure the test environment variables are set in the `.env` file as described above.
 
 - **Basic Test**: Run all tests with:
   ```bash
