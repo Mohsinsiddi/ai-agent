@@ -68,10 +68,6 @@ This repository contains an autonomous agent system built in Python. The agents 
 
    - **Note**: Ensure `.env` is listed in `.gitignore` to keep sensitive information secure.
 
-To update your README with an explanation of why you chose Tenderly’s Virtual Testnet over the general virtual testnet, and include details on using Sepolia Testnet for smoother transactions, you could add a new section under **Network and Deployment Details**. Here's how you could format it:
-
----
-
 ## Network and Deployment Details
 
 This project interacts with the blockchain via the **Sepolia Testnet**, where we deployed a custom token contract and ensured a funded source wallet. While exploring test environments, we initially considered using a **Virtual Testnet** with Tenderly. However, due to a block limit of 50 for trial sessions on the Virtual Testnet, we would need to reset frequently and redeploy our token contract each time, leading to inefficiencies in testing. This constraint prompted us to choose the Sepolia Testnet to avoid repetitive redeployment and to simulate real-time delays during transaction processing.
@@ -100,7 +96,8 @@ Two primary commands are needed to run the system:
 **Suggested CLI Workflow**:
 To run both commands concurrently, open two separate terminals and execute each command in a separate terminal. Alternatively, you can use a command multiplexer (like `tmux` or `screen`) to run both commands within the same terminal session.
 
-<img width="1175" alt="Screenshot 2024-11-06 at 6 50 55 PM" src="https://github.com/user-attachments/assets/abfab27e-dbf7-4ffa-ad11-20b7857f6a4a">
+<img width="1190" alt="Screenshot 2024-11-14 at 2 47 18 PM" src="https://github.com/user-attachments/assets/47c7a056-a397-465d-bc51-e91094924f0c">
+
 
 ## Running Tests
 
@@ -114,6 +111,7 @@ Before running the test suite, ensure the test environment variables are set in 
   ```bash
   poetry run pytest tests/test_autonomous_agents.py -v --log-cli-level=DEBUG
   ```
+<img width="1190" alt="Screenshot 2024-11-14 at 1 24 59 PM" src="https://github.com/user-attachments/assets/feda8444-7aaf-4aa2-821e-e26445539522">
 
 ## Code Overview
 
@@ -148,7 +146,6 @@ This project uses Redis and RQ to handle token transfer operations in the backgr
 ### Error Handling
 
 - Robust error handling is integrated into both handlers and behaviors, especially for Web3 transactions and balance checks.
-  <img width="1190" alt="Screenshot 2024-11-06 at 6 53 41 PM" src="https://github.com/user-attachments/assets/b2f19d82-091d-436f-a129-15af2e7a38ed">
 
 ## Dependencies
 
